@@ -1,0 +1,314 @@
+#include <WiFi.h>
+#include <WebServer.h>
+#include <DHT.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+// =====================================
+// 0. CONFIGURACION WI-FI Y SERVIDOR API
+// =====================================
+
+const char* WIFI_SSID = "TU_RED_WIFI";
+const char* WIFI_PASS = "TU_CONTrasena_WIFI";
+
+WebServer server(80);
+
+// =====================================
+// 1. CONFIGURACION DEL SENSOR DHT11
+// =====================================
+
+#define DHTPIN 4
+#define DHTTYPE DHT11
+
+DHT dht(DHTPIN, DHTTYPE);
+
+// =====================================
+// 2. CONFIGURACION SENSOR HUMEDAD SUELO
+// =====================================
+
+#define SOIL_PIN 34
+
+int sueloSeco = 3200;
+int sueloHumedo = 1200;
+
+// =====================================
+// 3. CONFIGURACION PANTALLA OLED
+// =====================================
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+#define OLED_ADDRESS 0x3C
+
+Adafruit_SSD1306 display(
+  SCREEN_WIDTH,
+  SCREEN_HEIGHT,
+  &Wire,
+  OLED_RESET
+);
+
+// =====================================
+// 4. CONFIGURACION DEL RELEVADOR
+// =====================================
+
+#define RELEVADOR 16
+float umbralTemperatura = 30.0;
+
+// =====================================
+// 5. VARIABLES DEL SISTEMA
+// =====================================
+
+float temperatura = NAN;
+float humedad = NAN;
+
+int lecturaSuelo = 0;
+int humedadSuelo = 0;
+bool relevadorActivo = false;
+
+unsigned long ultimaLecturaMs = 0;
+const unsigned long INTERVALO_LECTURA_MS = 2000;
+
+// =====================================
+// 6. LECTURA DE SENSORES
+// =====================================
+
+void leerSensores() {
+  humedad = dht.readHumidity();
+  temperatura = dht.readTemperature();
+
+  lecturaSuelo = analogRead(SOIL_PIN);
+  humedadSuelo = map(lecturaSuelo, sueloSeco, sueloHumedo, 0, 100);
+  humedadSuelo = constrain(humedadSuelo, 0, 100);
+}
+
+// =====================================
+// 7. CONTROL DEL RELEVADOR (POR TEMPERATURA)
+// =====================================
+
+void controlRelevador() {
+  if (isnan(temperatura)) {
+    digitalWrite(RELEVADOR, HIGH); // Apagado seguro si hay error de lectura
+    relevadorActivo = false;
+    return;
+  }
+
+  if (temperatura >= umbralTemperatura) {
+    digitalWrite(RELEVADOR, LOW); // Activado (lógica activa en bajo)
+    relevadorActivo = true;
+  } else {
+    digitalWrite(RELEVADOR, HIGH); // Desactivado
+    relevadorActivo = false;
+  }
+}
+
+// =====================================
+// 8. MOSTRAR DATOS EN PANTALLA OLED
+// =====================================
+
+void mostrarOLED() {
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+
+  display.setTextSize(1);
+  display.setCursor(14, 0);
+  display.println("MONITOREO AMBIENTAL");
+  display.drawLine(0, 11, 128, 11, SSD1306_WHITE);
+
+  display.setCursor(0, 15);
+  display.print("Temperatura: ");
+  if (isnan(temperatura)) {
+    display.println("--.- C");
+  } else {
+    display.print(temperatura, 1);
+    display.println(" C");
+  }
+
+  display.setCursor(0, 27);
+  display.print("Humedad aire: ");
+  if (isnan(humedad)) {
+    display.println("-- %");
+  } else {
+    display.print(humedad, 0);
+    display.println(" %");
+  }
+
+  display.setCursor(0, 39);
+  display.print("Humedad suelo: ");
+  display.print(humedadSuelo);
+  display.println(" %");
+
+  display.drawLine(0, 51, 128, 51, SSD1306_WHITE);
+
+  unsigned long segundosTotales = millis() / 1000;
+  int horas = (segundosTotales / 3600) % 24;
+  int minutos = (segundosTotales / 60) % 60;
+  int segundos = segundosTotales % 60;
+
+  display.setCursor(28, 55);
+  display.printf("Uptime: %02d:%02d:%02d", horas, minutos, segundos);
+
+  display.display();
+}
+
+// =====================================
+// 9. MOSTRAR DATOS EN MONITOR SERIAL
+// =====================================
+
+void mostrarSerial() {
+  Serial.println();
+  Serial.println("===== DATOS AMBIENTALES =====");
+
+  if (isnan(temperatura) || isnan(humedad)) {
+    Serial.println("Error al leer el DHT11");
+  } else {
+    Serial.print("Temperatura: ");
+    Serial.print(temperatura, 1);
+    Serial.println(" C");
+
+    Serial.print("Humedad ambiental: ");
+    Serial.print(humedad, 1);
+    Serial.println(" %");
+  }
+
+  Serial.print("Lectura analogica suelo: ");
+  Serial.println(lecturaSuelo);
+
+  Serial.print("Humedad del suelo: ");
+  Serial.print(humedadSuelo);
+  Serial.println(" %");
+
+  Serial.print("Relevador (Temp >= ");
+  Serial.print(umbralTemperatura, 1);
+  Serial.print(" C): ");
+  Serial.println(relevadorActivo ? "ACTIVADO" : "DESACTIVADO");
+
+  unsigned long segundosTotales = millis() / 1000;
+  int horas = (segundosTotales / 3600) % 24;
+  int minutos = (segundosTotales / 60) % 60;
+  int segundos = segundosTotales % 60;
+
+  Serial.printf("Tiempo activo: %02d:%02d:%02d\n", horas, minutos, segundos);
+  Serial.println("=============================");
+}
+
+// =====================================
+// 10. ENDPOINTS DE LA API HTTP
+// =====================================
+
+void enviarCabecerasCORS() {
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.sendHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  server.sendHeader("Access-Control-Allow-Headers", "Content-Type");
+}
+
+void handleOptions() {
+  enviarCabecerasCORS();
+  server.send(204);
+}
+
+void handleApiDatos() {
+  enviarCabecerasCORS();
+
+  float tempJson = isnan(temperatura) ? 0.0 : temperatura;
+  float humJson = isnan(humedad) ? 0.0 : humedad;
+
+  String json = "{";
+  json += "\"temperatura\":" + String(tempJson, 1) + ",";
+  json += "\"humedad_ambiente\":" + String(humJson, 0) + ",";
+  json += "\"humedad_suelo\":" + String(humedadSuelo) + ",";
+  json += "\"relevador_activo\":" + String(relevadorActivo ? "true" : "false") + ",";
+  json += "\"umbral_temperatura\":" + String(umbralTemperatura, 1) + ",";
+  json += "\"ip\":\"" + WiFi.localIP().toString() + "\"";
+  json += "}";
+
+  server.send(200, "application/json", json);
+}
+
+void conectarWiFi() {
+  Serial.print("Conectando a Wi-Fi: ");
+  Serial.println(WIFI_SSID);
+
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+
+  unsigned long inicio = millis();
+  while (WiFi.status() != WL_CONNECTED && millis() - inicio < 15000) {
+    delay(400);
+    Serial.print(".");
+  }
+  Serial.println();
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.print("Wi-Fi conectado. IP local: ");
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println("No se pudo conectar al Wi-Fi en el tiempo de espera.");
+  }
+}
+
+// =====================================
+// 11. CONFIGURACION INICIAL
+// =====================================
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(RELEVADOR, OUTPUT);
+  digitalWrite(RELEVADOR, HIGH);
+
+  dht.begin();
+
+  analogReadResolution(12);
+  analogSetPinAttenuation(SOIL_PIN, ADC_11db);
+
+  Wire.begin(21, 22);
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS)) {
+    Serial.println("Error al iniciar pantalla OLED");
+    while (true) {
+      delay(1000);
+    }
+  }
+
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+  display.setTextSize(1);
+  display.setCursor(15, 18);
+  display.println("SISTEMA DE");
+  display.setCursor(15, 32);
+  display.println("MONITOREO");
+  display.display();
+  delay(1500);
+
+  conectarWiFi();
+
+  server.on("/api/datos", HTTP_GET, handleApiDatos);
+  server.on("/api/datos", HTTP_OPTIONS, handleOptions);
+  server.begin();
+
+  Serial.println("Servidor API iniciado en /api/datos");
+  Serial.println("SISTEMA DE MONITOREO ACTIVO");
+
+  leerSensores();
+  controlRelevador();
+  mostrarOLED();
+  mostrarSerial();
+  ultimaLecturaMs = millis();
+}
+
+// =====================================
+// 12. BUCLE PRINCIPAL
+// =====================================
+
+void loop() {
+  server.handleClient();
+
+  if (millis() - ultimaLecturaMs >= INTERVALO_LECTURA_MS) {
+    ultimaLecturaMs = millis();
+    leerSensores();
+    controlRelevador();
+    mostrarOLED();
+    mostrarSerial();
+  }
+}
