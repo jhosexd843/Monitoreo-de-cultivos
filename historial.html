@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Invernadero | Historial y PDF</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
+<style>
+:root {
+  --verde: #157215; --lima: #cee98e;
+  --bg-grad: radial-gradient(circle at 12% 10%, #ffffff 0%, #eefbd6 38%, #d2f0a8 75%, #bce6b4 100%);
+  --card: rgba(255, 255, 255, 0.58); --card-borde: rgba(255, 255, 255, 0.88);
+  --card-sombra: 0 12px 32px -4px rgba(21, 114, 21, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  --texto: #10260c; --suave: #3d5434; --input-bg: rgba(255, 255, 255, 0.68);
+  --orbe-1: rgba(154, 235, 110, 0.55); --orbe-2: rgba(114, 224, 210, 0.42); --orbe-3: rgba(255, 251, 145, 0.65);
+  box-sizing: border-box;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-grad: radial-gradient(circle at 15% 10%, #1a3316 0%, #0e1d0d 55%, #071108 100%);
+    --card: rgba(22, 42, 18, 0.58); --card-borde: rgba(180, 235, 150, 0.22);
+    --card-sombra: 0 14px 36px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.14);
+    --texto: #f3f8dc; --suave: #b4c59a; --input-bg: rgba(10, 22, 9, 0.58);
+    --orbe-1: rgba(45, 165, 55, 0.28); --orbe-2: rgba(32, 168, 175, 0.22); --orbe-3: rgba(195, 215, 55, 0.18);
+    color-scheme: dark;
+  }
+}
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  margin: 0; min-height: 100vh; background: var(--bg-grad); background-attachment: fixed;
+  color: var(--texto); font-family: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  line-height: 1.45; overflow-x: hidden; position: relative;
+}
+.aero-bg { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.orbe { position: absolute; border-radius: 50%; filter: blur(60px); animation: flotar 14s ease-in-out infinite alternate; }
+.orbe-1 { width: 420px; height: 420px; background: var(--orbe-1); top: -80px; left: -60px; }
+.orbe-2 { width: 360px; height: 360px; background: var(--orbe-2); top: 38%; right: -70px; animation-delay: -5s; }
+.orbe-3 { width: 460px; height: 460px; background: var(--orbe-3); bottom: -120px; left: 22%; animation-delay: -9s; }
+@keyframes flotar { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(25px, 30px) scale(1.08); } }
+
+.wrap { max-width: 1040px; margin: 0 auto; padding: 28px 20px 48px; }
+header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
+h1 { margin: 0; font-size: clamp(1.55rem, 3.6vw, 2.2rem); font-weight: 800; letter-spacing: -0.02em; }
+.sub { margin: 4px 0 0; color: var(--suave); font-size: 0.92rem; }
+
+.top-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn-volver, .btn-pdf, .btn-sec {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 16px; border-radius: 16px; font-family: inherit; font-weight: 700;
+  font-size: 0.9rem; text-decoration: none; cursor: pointer; transition: transform 0.2s ease;
+}
+.btn-volver, .btn-sec { background: var(--card); color: var(--texto); border: 1px solid var(--card-borde); box-shadow: var(--card-sombra); }
+.btn-pdf { background: linear-gradient(180deg, #43d654 0%, var(--verde) 100%); color: #fff; border: 0; box-shadow: 0 8px 18px -4px rgba(21, 114, 21, 0.38); }
+.btn-volver:hover, .btn-pdf:hover, .btn-sec:hover { transform: translateY(-2px); }
+
+.card {
+  position: relative; overflow: hidden; background: var(--card);
+  backdrop-filter: blur(18px) saturate(145%); -webkit-backdrop-filter: blur(18px) saturate(145%);
+  border: 1px solid var(--card-borde); box-shadow: var(--card-sombra); border-radius: 24px; padding: 22px;
+}
+.card::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 45%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 100%); pointer-events: none;
+}
+
+.filtros { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-bottom: 18px; }
+.campo { display: flex; flex-direction: column; gap: 5px; min-width: 180px; }
+label { font-size: 0.82rem; font-weight: 700; color: var(--suave); }
+select, input {
+  padding: 9px 12px; border-radius: 13px; border: 1px solid rgba(21,114,21,0.24);
+  background: var(--input-bg); color: var(--texto); font-family: inherit; font-size: 0.9rem;
+}
+
+.tabla-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th, td { padding: 11px 12px; text-align: left; border-bottom: 1px solid rgba(21, 114, 21, 0.14); }
+th { font-weight: 800; color: var(--suave); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.03em; }
+
+/* Optimización para guardar o imprimir como PDF */
+@media print {
+  .aero-bg, .top-actions, .filtros, .btn-sec { display: none !important; }
+  body { background: #ffffff !important; color: #000000 !important; }
+  .card { background: #ffffff !important; box-shadow: none !important; border: 1px solid #ccc !important; }
+}
+</style>
+</head>
+<body>
+<div class="aero-bg" aria-hidden="true">
+  <div class="orbe orbe-1"></div><div class="orbe orbe-2"></div><div class="orbe orbe-3"></div>
+</div>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>HISTORIAL DE LECTURAS</h1>
+      <p class="sub">Consulta el registro de sensores y genera un reporte en PDF.</p>
+    </div>
+    <div class="top-actions">
+      <button type="button" class="btn-sec" id="btn-muestra">+ Agregar lectura de prueba</button>
+      <button type="button" class="btn-pdf" id="btn-pdf">Generar PDF</button>
+      <a href="pagina principal.html" class="btn-volver">← Volver</a>
+    </div>
+  </header>
+
+  <section class="card" id="reporte-pdf">
+    <div class="filtros">
+      <div class="campo">
+        <label for="filtro-cultivo">Cultivo</label>
+        <select id="filtro-cultivo">
+          <option value="todos">Todos los cultivos</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="filtro-fecha">Fecha</label>
+        <input id="filtro-fecha" type="date">
+      </div>
+      <button type="button" class="btn-sec" id="btn-limpiar">Limpiar filtros</button>
+    </div>
+
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha / Hora</th>
+            <th>Cultivo</th>
+            <th>Temp. (°C)</th>
+            <th>Hum. Amb. (%)</th>
+            <th>Hum. Suelo (%)</th>
+            <th>Riego</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-historial"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<script>
+const STORAGE_KEY = "invernadero_sistema_v1";
+
+function obtenerHistorial() {
+  const st = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") || {};
+  if (!Array.isArray(st.historial) || !st.historial.length) {
+    st.historial = [
+      { fecha: "2026-11-24", hora: "08:00", cultivo: "Jitomate Saladette", temp: 22.4, humAmb: 68, humSuelo: 46, riego: "Apagado" },
+      { fecha: "2026-11-24", hora: "12:00", cultivo: "Jitomate Saladette", temp: 27.8, humAmb: 61, humSuelo: 35, riego: "Activado" },
+      { fecha: "2026-11-24", hora: "16:00", cultivo: "Lechuga Orejona", temp: 21.1, humAmb: 74, humSuelo: 58, riego: "Apagado" }
+    ];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(st));
+  }
+  return st;
+}
+
+function poblarCultivos(st) {
+  const sel = document.getElementById("filtro-cultivo");
+  const nombres = new Set((st.cultivos || []).map(c => c.nombre));
+  (st.historial || []).forEach(r => r.cultivo && nombres.add(r.cultivo));
+  nombres.forEach(n => {
+    const opt = document.createElement("option");
+    opt.value = n;
+    opt.textContent = n;
+    sel.appendChild(opt);
+  });
+}
+
+function renderTabla() {
+  const st = obtenerHistorial();
+  const fCultivo = document.getElementById("filtro-cultivo").value;
+  const fFecha = document.getElementById("filtro-fecha").value;
+  const tbody = document.getElementById("tbody-historial");
+
+  const filas = (st.historial || []).filter(r => {
+    if (fCultivo !== "todos" && r.cultivo !== fCultivo) return false;
+    if (fFecha && r.fecha !== fFecha) return false;
+    return true;
+  });
+
+  tbody.innerHTML = filas.length
+    ? filas.map(r => `
+        <tr>
+          <td>${r.fecha} ${r.hora}</td>
+          <td>${r.cultivo}</td>
+          <td>${Number(r.temp).toFixed(1)} °C</td>
+          <td>${r.humAmb}%</td>
+          <td>${r.humSuelo}%</td>
+          <td>${r.riego}</td>
+        </tr>
+      `).join("")
+    : `<tr><td colspan="6" class="sub">No hay registros que coincidan con el filtro.</td></tr>`;
+}
+
+document.getElementById("btn-muestra").addEventListener("click", () => {
+  const st = obtenerHistorial();
+  const activo = (st.cultivos || []).find(c => c.id === st.cultivoActivoId)?.nombre || "Jitomate Saladette";
+  const ahora = new Date();
+  const fecha = ahora.toISOString().slice(0, 10);
+  const hora = ahora.toTimeString().slice(0, 5);
+  const humSuelo = Math.floor(32 + Math.random() * 34);
+
+  st.historial.unshift({
+    fecha,
+    hora,
+    cultivo: activo,
+    temp: Number((20 + Math.random() * 10).toFixed(1)),
+    humAmb: Math.floor(58 + Math.random() * 24),
+    humSuelo,
+    riego: humSuelo < 40 ? "Activado" : "Apagado"
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(st));
+  renderTabla();
+});
+
+document.getElementById("btn-pdf").addEventListener("click", () => {
+  window.print();
+});
+
+document.getElementById("filtro-cultivo").addEventListener("change", renderTabla);
+document.getElementById("filtro-fecha").addEventListener("change", renderTabla);
+document.getElementById("btn-limpiar").addEventListener("click", () => {
+  document.getElementById("filtro-cultivo").value = "todos";
+  document.getElementById("filtro-fecha").value = "";
+  renderTabla();
+});
+
+const estadoInicial = obtenerHistorial();
+poblarCultivos(estadoInicial);
+renderTabla();
+</script>
+</body>
+</html>

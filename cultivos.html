@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Invernadero | Cultivos</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
+<style>
+:root {
+  --verde: #157215;
+  --verde-brillo: #38c149;
+  --lima: #cee98e;
+  --bg-grad: radial-gradient(circle at 12% 10%, #ffffff 0%, #eefbd6 38%, #d2f0a8 75%, #bce6b4 100%);
+  --card: rgba(255, 255, 255, 0.58);
+  --card-borde: rgba(255, 255, 255, 0.88);
+  --card-sombra: 0 12px 32px -4px rgba(21, 114, 21, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  --texto: #10260c;
+  --suave: #3d5434;
+  --input-bg: rgba(255, 255, 255, 0.68);
+  --orbe-1: rgba(154, 235, 110, 0.55);
+  --orbe-2: rgba(114, 224, 210, 0.42);
+  --orbe-3: rgba(255, 251, 145, 0.65);
+  box-sizing: border-box;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-grad: radial-gradient(circle at 15% 10%, #1a3316 0%, #0e1d0d 55%, #071108 100%);
+    --card: rgba(22, 42, 18, 0.58);
+    --card-borde: rgba(180, 235, 150, 0.22);
+    --card-sombra: 0 14px 36px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.14);
+    --texto: #f3f8dc;
+    --suave: #b4c59a;
+    --input-bg: rgba(10, 22, 9, 0.58);
+    --orbe-1: rgba(45, 165, 55, 0.28);
+    --orbe-2: rgba(32, 168, 175, 0.22);
+    --orbe-3: rgba(195, 215, 55, 0.18);
+    color-scheme: dark;
+  }
+}
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  margin: 0; min-height: 100vh; background: var(--bg-grad); background-attachment: fixed;
+  color: var(--texto); font-family: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  line-height: 1.45; overflow-x: hidden; position: relative;
+}
+.aero-bg { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.orbe { position: absolute; border-radius: 50%; filter: blur(60px); animation: flotar 14s ease-in-out infinite alternate; }
+.orbe-1 { width: 420px; height: 420px; background: var(--orbe-1); top: -80px; left: -60px; }
+.orbe-2 { width: 360px; height: 360px; background: var(--orbe-2); top: 38%; right: -70px; animation-delay: -5s; }
+.orbe-3 { width: 460px; height: 460px; background: var(--orbe-3); bottom: -120px; left: 22%; animation-delay: -9s; }
+@keyframes flotar { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(25px, 30px) scale(1.08); } }
+
+.wrap { max-width: 980px; margin: 0 auto; padding: 28px 20px 48px; }
+header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
+h1 { margin: 0; font-size: clamp(1.55rem, 3.6vw, 2.2rem); font-weight: 800; letter-spacing: -0.02em; }
+.sub { margin: 4px 0 0; color: var(--suave); font-size: 0.92rem; }
+
+.btn-volver, .btn-primario, .btn-sec {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 16px; border-radius: 16px; font-family: inherit; font-weight: 700;
+  font-size: 0.9rem; text-decoration: none; cursor: pointer; transition: transform 0.2s ease, filter 0.2s ease;
+}
+.btn-volver, .btn-sec {
+  background: var(--card); color: var(--texto); border: 1px solid var(--card-borde); box-shadow: var(--card-sombra);
+}
+.btn-primario {
+  background: linear-gradient(180deg, #43d654 0%, var(--verde) 100%);
+  color: #fff; border: 0; box-shadow: 0 8px 18px -4px rgba(21, 114, 21, 0.38);
+}
+.btn-volver:hover, .btn-sec:hover, .btn-primario:hover { transform: translateY(-2px); }
+
+.grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 18px; }
+.card {
+  position: relative; overflow: hidden; background: var(--card);
+  backdrop-filter: blur(18px) saturate(145%); -webkit-backdrop-filter: blur(18px) saturate(145%);
+  border: 1px solid var(--card-borde); box-shadow: var(--card-sombra); border-radius: 24px; padding: 22px;
+}
+.card::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 45%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+}
+.col-5 { grid-column: span 5; }
+.col-7 { grid-column: span 7; }
+@media (max-width: 820px) { .col-5, .col-7 { grid-column: span 12; } }
+
+h2 { margin: 0 0 14px; font-size: 1.05rem; font-weight: 800; }
+form { display: flex; flex-direction: column; gap: 12px; }
+.campo { display: flex; flex-direction: column; gap: 5px; }
+label { font-size: 0.86rem; font-weight: 600; }
+input, select {
+  width: 100%; padding: 10px 13px; border-radius: 14px;
+  border: 1px solid rgba(21, 114, 21, 0.24); background: var(--input-bg);
+  color: var(--texto); font-family: inherit; font-size: 0.94rem; outline: none;
+}
+input:focus, select:focus { border-color: var(--verde); box-shadow: 0 0 0 3px rgba(56, 193, 73, 0.2); }
+
+.lista-cultivos { display: flex; flex-direction: column; gap: 10px; }
+.item-cultivo {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 13px 15px; border-radius: 18px;
+  background: rgba(255, 255, 255, 0.42); border: 1px solid var(--card-borde);
+}
+.item-cultivo.activo {
+  background: linear-gradient(145deg, rgba(214, 245, 138, 0.72), rgba(166, 224, 92, 0.58));
+  color: #0d2b0a;
+}
+.cultivo-nombre { font-weight: 800; font-size: 0.98rem; }
+.cultivo-meta { font-size: 0.82rem; opacity: 0.85; }
+.acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-mini {
+  padding: 6px 11px; border-radius: 11px; font-family: inherit; font-size: 0.8rem;
+  font-weight: 700; cursor: pointer; border: 1px solid rgba(21, 114, 21, 0.25);
+  background: rgba(255, 255, 255, 0.75); color: #10260c;
+}
+.btn-mini.peligro { border-color: rgba(185, 28, 28, 0.35); color: #991b1b; }
+.msg { margin-top: 10px; font-size: 0.86rem; font-weight: 700; color: var(--verde); min-height: 1.2em; }
+</style>
+</head>
+<body>
+<div class="aero-bg" aria-hidden="true">
+  <div class="orbe orbe-1"></div><div class="orbe orbe-2"></div><div class="orbe orbe-3"></div>
+</div>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>CULTIVOS DEL INVERNADERO</h1>
+      <p class="sub">Registra los nombres de tus cultivos y elige cuál está monitoreando actualmente el ESP32.</p>
+    </div>
+    <a href="pagina principal.html" class="btn-volver">← Volver al monitoreo</a>
+  </header>
+
+  <main class="grid">
+    <section class="card col-5">
+      <h2>Agregar nuevo cultivo</h2>
+      <form id="form-cultivo">
+        <div class="campo">
+          <label for="nombre-cultivo">Nombre del cultivo</label>
+          <input id="nombre-cultivo" type="text" required placeholder="ej. Jitomate Saladette">
+        </div>
+        <div class="campo">
+          <label for="zona-cultivo">Sector o cama de cultivo</label>
+          <input id="zona-cultivo" type="text" placeholder="ej. Cama 1 - Lado norte">
+        </div>
+        <div class="campo">
+          <label for="etapa-cultivo">Etapa actual</label>
+          <select id="etapa-cultivo">
+            <option value="Almácigo / Plántula">Almácigo / Plántula</option>
+            <option value="Crecimiento vegetativo" selected>Crecimiento vegetativo</option>
+            <option value="Floración / Fructificación">Floración / Fructificación</option>
+            <option value="Cosecha">Cosecha</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primario">Guardar cultivo</button>
+      </form>
+      <div id="msg-cultivo" class="msg"></div>
+    </section>
+
+    <section class="card col-7">
+      <h2>Cultivos registrados</h2>
+      <div id="lista-cultivos" class="lista-cultivos"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+const STORAGE_KEY = "invernadero_sistema_v1";
+
+function cargarEstado() {
+  const defecto = {
+    cultivoActivoId: "c-1",
+    cultivos: [
+      { id: "c-1", nombre: "Jitomate Saladette", zona: "Cama 1", etapa: "Crecimiento vegetativo" },
+      { id: "c-2", nombre: "Lechuga Orejona", zona: "Cama 2", etapa: "Almácigo / Plántula" }
+    ],
+    umbrales: {
+      sueloMin: 40, sueloMax: 60,
+      tempMin: 20, tempMax: 28,
+      humMin: 60, humMax: 80
+    },
+    conexion: {
+      url: "http://192.168.1.50/api/datos",
+      intervaloMs: 3000,
+      simular: true
+    }
+  };
+  const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+  return { ...defecto, ...(raw || {}) };
+}
+
+function guardarEstado(estado) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(estado));
+}
+
+function renderCultivos() {
+  const estado = cargarEstado();
+  const cont = document.getElementById("lista-cultivos");
+  cont.innerHTML = "";
+
+  if (!estado.cultivos.length) {
+    cont.innerHTML = `<p class="sub">Aún no hay cultivos registrados. Agrega el primero a la izquierda.</p>`;
+    return;
+  }
+
+  estado.cultivos.forEach((c) => {
+    const esActivo = c.id === estado.cultivoActivoId;
+    const div = document.createElement("div");
+    div.className = `item-cultivo${esActivo ? " activo" : ""}`;
+    div.innerHTML = `
+      <div>
+        <div class="cultivo-nombre">${c.nombre} ${esActivo ? "· (Activo)" : ""}</div>
+        <div class="cultivo-meta">${c.zona || "Sin zona"} · ${c.etapa}</div>
+      </div>
+      <div class="acciones">
+        ${!esActivo ? `<button type="button" class="btn-mini" data-activar="${c.id}">Activar</button>` : ""}
+        <button type="button" class="btn-mini peligro" data-borrar="${c.id}">Eliminar</button>
+      </div>
+    `;
+    cont.appendChild(div);
+  });
+
+  cont.querySelectorAll("[data-activar]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const st = cargarEstado();
+      st.cultivoActivoId = btn.dataset.activar;
+      guardarEstado(st);
+      renderCultivos();
+    });
+  });
+
+  cont.querySelectorAll("[data-borrar]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const st = cargarEstado();
+      st.cultivos = st.cultivos.filter((x) => x.id !== btn.dataset.borrar);
+      if (st.cultivoActivoId === btn.dataset.borrar) {
+        st.cultivoActivoId = st.cultivos[0]?.id || "";
+      }
+      guardarEstado(st);
+      renderCultivos();
+    });
+  });
+}
+
+document.getElementById("form-cultivo").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const nombre = document.getElementById("nombre-cultivo").value.trim();
+  const zona = document.getElementById("zona-cultivo").value.trim();
+  const etapa = document.getElementById("etapa-cultivo").value;
+  if (!nombre) return;
+
+  const st = cargarEstado();
+  const nuevo = { id: "c-" + Date.now(), nombre, zona, etapa };
+  st.cultivos.push(nuevo);
+  if (!st.cultivoActivoId) st.cultivoActivoId = nuevo.id;
+  guardarEstado(st);
+
+  e.target.reset();
+  document.getElementById("msg-cultivo").textContent = `Cultivo "${nombre}" guardado.`;
+  renderCultivos();
+});
+
+renderCultivos();
+</script>
+</body>
+</html>
